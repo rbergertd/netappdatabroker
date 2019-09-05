@@ -127,7 +127,7 @@
                         "value": []
                     },
                     "commandToExecute": {
-                        "value": "sh -c \"curl -v --location https://cf.cloudsync.netapp.com/5d5ae9a64fd997000d4e5f42_installer --connect-timeout 5 --retry 3 --output installer.sh && sed -i -e 's/\r$//' installer.sh && bash installer.sh\""
+                        "value": "sh -c \"curl -v --location https://raw.githubusercontent.com/rbergertd/netappdatabroker/master/databroker_install_script.sh --connect-timeout 5 --retry 3 --output installer.sh && sed -i -e 's/\r$//' installer.sh && bash installer.sh\""
                     }
                 }
             },
