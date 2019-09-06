@@ -27,4 +27,3 @@ $netAppInstallerId = Write-Output $Result3.id
 $netAppInstallerLink = "https://cf.cloudsync.netapp.com/" + $netAppInstallerId + "_installer"
 Write-Output $netAppInstallerLink
 
-#https://cf.cloudsync.netapp.com/5d7146e8ae5de0000979e814_installer
