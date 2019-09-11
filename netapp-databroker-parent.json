@@ -5,28 +5,27 @@
         "virtualMachineName": {
             "type": "string"
         },
-        "virtualNetworkName": {
-            "type": "string"
-        },
         "adminPublicKey": {
             "type": "string"
         },
-        "storageAccountName": {
-            "type": "string"
-        },
-        "storageAccountType": {
-            "type": "string"
-        },
-        "subnetName": {
-            "type": "string"
+        "netAppDataBrokerInstallLink": {
+            "type": "string",
+            "defaultValue": "https://cf.cloudsync.netapp.com/5d7146e8ae5de0000979e814_installer"
         }
     },
     "variables": {
         "location": "[resourceGroup().location]",
         "rgName": "[resourceGroup().name]",
-        "vnetId": "[resourceId(variables('rgName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+        "deployLinuxScriptURL": "https://raw.githubusercontent.com/rbergertd/netappdatabroker/master/netapp-databroker-nested.json",
+        "storageAccountName": "[tolower(concat('dabrsa',uniqueString(resourceGroup().id)))]",
+        "virtualNetworkName": "netapp-cloudsync-vnet",
+        "vnetAddressRange": "10.0.0.0/24",
+        "subnetName": "netapp-cloudsync-subnet",
+        "subnetAddressRange": "10.0.0.0/26",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', variables('subnetName'))]",
+        "vnetId": "[resourceId(variables('rgName'),'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "virtualMachineSize": "Standard_DS3_v2",
+        "storageAccountType": "Standard_GRS",
         "adminUsername": "databroker",
         "networkSecurityGroupName": "[concat(parameters('virtualMachineName'), '-nsg')]",
         "networkInterfaceName": "[concat(parameters('virtualMachineName'), '-nic')]",
@@ -36,13 +35,34 @@
     },
     "resources": [
         {
+            "name": "[variables('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "location": "[variables('location')]",
+            "apiVersion": "2015-06-15",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('vnetAddressRange')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetAddressRange')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
             "name": "[parameters('virtualMachineName')]",
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2016-04-30-preview",
             "location": "[variables('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]",
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
             ],
             "properties": {
                 "osProfile": {
@@ -87,7 +107,7 @@
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": true,
-                        "storageUri": "[reference(resourceId(variables('rgName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
+                        "storageUri": "[reference(resourceId(variables('rgName'), 'Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
                     }
                 }
             }
@@ -99,7 +119,7 @@
             "properties": {
                 "mode": "incremental",
                 "templateLink": {
-                    "uri": "https://gallery.azure.com/artifact/20161101/microsoft.custom-script-linux-arm.2.0.50/Artifacts/MainTemplate.json"
+                    "uri": "[variables('deployLinuxScriptURL')]"
                 },
                 "parameters": {
                     "vmName": {
@@ -108,11 +128,8 @@
                     "location": {
                         "value": "[variables('location')]"
                     },
-                    "fileUris": {
-                        "value": []
-                    },
-                    "commandToExecute": {
-                        "value": "sh -c \"curl -v --location https://cf.cloudsync.netapp.com/5d41cde2614c3c000ad0b5b7_installer --connect-timeout 5 --retry 3 --output installer.sh && sed -i -e 's/\r$//' installer.sh && bash installer.sh\""
+                    "netAppDataBrokerInstallLink": {
+                        "value": "[parameters('netAppDataBrokerInstallLink')]"
                     }
                 }
             },
@@ -121,12 +138,12 @@
             ]
         },
         {
-            "name": "[parameters('storageAccountName')]",
+            "name": "[variables('storageAccountName')]",
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2015-06-15",
             "location": "[variables('location')]",
-            "properties": { 
-                "accountType": "[parameters('storageAccountType')]"
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
             }
         },
         {
@@ -136,7 +153,8 @@
             "location": "[variables('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]",
-                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/virtualnetworks/', variables('virtualNetworkName'))]"
             ],
             "properties": {
                 "ipConfigurations": [

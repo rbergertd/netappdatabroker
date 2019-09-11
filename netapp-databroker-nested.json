@@ -8,11 +8,8 @@
     "location": {
       "type": "string"
     },
-    "fileUris": {
-      "type": "array"
-    },
-    "commandToExecute": {
-      "type": "securestring"
+    "netAppDataBrokerInstallLink": {
+      "type": "string"
     }
   },
   "resources": [
@@ -26,11 +23,9 @@
         "type": "CustomScriptForLinux",
         "typeHandlerVersion": "1.4",
         "autoUpgradeMinorVersion": true,
-        "settings": {
-          "fileUris": "[parameters('fileUris')]"
-        },
+        "settings": {},
         "protectedSettings": {
-          "commandToExecute": "[parameters('commandToExecute')]"
+          "commandToExecute": "[concat('sh -c \"curl -v --location ', parameters('netAppDataBrokerInstallLink') ,' --connect-timeout 5 --retry 3 --output installer.sh && sed -i -e 's/\r$//' installer.sh && bash installer.sh\"')]"
         }
       }
     }
