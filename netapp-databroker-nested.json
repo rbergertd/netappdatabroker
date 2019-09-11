@@ -25,7 +25,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {},
         "protectedSettings": {
-          "commandToExecute": "[concat('sh -c \"curl -v --location ', parameters('netAppDataBrokerInstallLink') ,' --connect-timeout 5 --retry 3 --output installer.sh && sed -i -e 's/\r$//' installer.sh && bash installer.sh\"')]"
+          "commandToExecute": "[concat('sh -c \"curl -v --location ', parameters('netAppDataBrokerInstallLink'),' --connect-timeout 5 --retry 3 --output installer.sh && bash installer.sh\"')]"
         }
       }
     }
