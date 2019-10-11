@@ -78,9 +78,7 @@
         "storageAccountName": "[tolower(concat('dabrsa',uniqueString(resourceGroup().id)))]",
         "vnetAddressRange": "10.0.0.0/24",
         "subnetAddressRange": "10.0.0.0/26",
-        "existingNetworkVnetIdTest": "[concat('/subscriptions/', subscription().id, '/resourceGroups/', parameters('existingVnetResourceGroup'), '/providers/Microsoft.Network/virtualNetworks', parameters('existingVnetName'))]",
-        "existingNetworkVnetId": "[resourceId(parameters('existingVnetResourceGroup') ,'Microsoft.Network/virtualNetworks',parameters('existingVnetName'))]",
-        "existingNetworkSubnetId": "[concat(variables('existingNetworkVnetId'), '/subnets/', parameters('existingSubnetName'))]",
+        "existingNetworkSubnetId": "[resourceId(parameters('existingVnetResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "newNetworkVnetId": "[resourceId(variables('rgName') ,'Microsoft.Network/virtualNetworks',parameters('newVnetName'))]",
         "newNetworkSubnetId": "[concat(variables('newNetworkVnetId'), '/subnets/', parameters('newSubnetName'))]",
         "virtualMachineSize": "Standard_DS3_v2",
@@ -122,8 +120,7 @@
             "location": "[variables('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]",
-                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
-                
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -131,7 +128,7 @@
                         "name": "ipconfig1",
                         "properties": {
                             "subnet": {
-                                "id": "[if(equals(parameters('newVnetCondition'), 'true'), variables('newNetworkSubnetId'), variables('existingNetworkSubnetId'))]"
+                                "id": "[if(equals(parameters('newVnet'), 'yes'), variables('newNetworkSubnetId'), variables('existingNetworkSubnetId'))]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIpAddress": {
